@@ -1,0 +1,3 @@
+[submodule ".submodules/ImGui.NET"]
+	path = .submodules/ImGui.NET
+	url = https://github.com/mellinoe/ImGui.NET.git
