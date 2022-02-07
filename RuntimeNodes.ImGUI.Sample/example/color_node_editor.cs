@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Veldrid;
+using Veldrid.Sdl2;
 using static RuntimeNodes.ImGUI.Utils.UnsafeUtils.Arrays;
 using ImNodes = imnodesNET.imnodes;
 
@@ -29,8 +30,8 @@ namespace RuntimeNodes.ImGUI.Sample.example
 
         class Node
         {
-            public NodeType type { get; }
-            public float value { get; }
+            public NodeType type;
+            public float value;
 
             public Node(NodeType t)
             {
@@ -48,16 +49,16 @@ namespace RuntimeNodes.ImGUI.Sample.example
         static float current_time_seconds = 0.0f;
         static bool emulate_three_button_mouse = false;
 
-        float clamp(float a, float min, float max)
+        static float clamp(float a, float min, float max)
         {
             return Math.Max(Math.Min(a, min), max);
         }
 
-        uint evaluate(Graph<Node> graph, int root_node)
+        static uint evaluate(Graph<Node> graph, int root_node)
         {
             Stack<int> postorder = new Stack<int>();
-            dfs_traverse(
-                graph, root_node, (int node_id) => { postorder.push(node_id); });
+            Graph<Node>.dfs_traverse(
+                graph, root_node, (int node_id) => { postorder.Push(node_id); });
 
             Stack<float> value_stack = new Stack<float>();
             while (postorder.Count > 0)
@@ -98,7 +99,7 @@ namespace RuntimeNodes.ImGUI.Sample.example
                         // If the edge does not have an edge connecting to another node, then just use the value
                         // at this node. It means the node's input pin has not been connected to anything and
                         // the value comes from the node's UI.
-                        if (graph.num_edges_from_node(id) == 0ul)
+                        if (graph.num_edges_from_node(id) == 0)
                         {
                             value_stack.Push(node.value);
                         }
@@ -122,7 +123,7 @@ namespace RuntimeNodes.ImGUI.Sample.example
         class ColorNodeEditor
         {
 
-            Graph<Node> graph_;
+            Graph<Node> graph_ = new Graph<Node>();
             List<UiNode> nodes_ = new List<UiNode>();
             int root_node_id_;
             AlignedArray<int> selected_links = new AlignedArray<int>();
@@ -133,11 +134,9 @@ namespace RuntimeNodes.ImGUI.Sample.example
                 root_node_id_ = -1;
             }
 
+            DateTime m_startedTime = DateTime.Now;
             public unsafe void show()
             {
-                // Update timer context
-                current_time_seconds = 0.001f * SDL_GetTicks();
-
                 var flags = ImGuiWindowFlags.MenuBar;
 
                 bool opened = false;
@@ -192,7 +191,7 @@ namespace RuntimeNodes.ImGUI.Sample.example
                 {
                     bool open_popup = ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) &&
                                             ImNodes.IsEditorHovered() &&
-                                            ImGui.IsKeyReleased(SDL_SCANCODE_A);
+                                            ImGui.IsKeyReleased((int)SDL_Scancode.SDL_SCANCODE_A);
 
                     ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8.0f, 8.0f));
                     if (!ImGui.IsAnyItemHovered() && open_popup)
@@ -308,11 +307,11 @@ namespace RuntimeNodes.ImGUI.Sample.example
                                 ImNodes.BeginInputAttribute(node.add.lhs);
                                 float label_width = ImGui.CalcTextSize("left").X;
                                 ImGui.TextUnformatted("left");
-                                if (graph_.num_edges_from_node(node.add.lhs) == 0ul)
+                                if (graph_.num_edges_from_node(node.add.lhs) == 0)
                                 {
                                     ImGui.SameLine();
                                     ImGui.PushItemWidth(node_width - label_width);
-                                    ImGui.DragFloat("##hidelabel", &graph_.node(node.add.lhs).value, 0.01f);
+                                    ImGui.DragFloat("##hidelabel", ref graph_.node(node.add.lhs).value, 0.01f);
                                     ImGui.PopItemWidth();
                                 }
                                 ImNodes.EndInputAttribute();
@@ -322,11 +321,11 @@ namespace RuntimeNodes.ImGUI.Sample.example
                                 ImNodes.BeginInputAttribute(node.add.rhs);
                                 float label_width = ImGui.CalcTextSize("right").X;
                                 ImGui.TextUnformatted("right");
-                                if (graph_.num_edges_from_node(node.add.rhs) == 0ul)
+                                if (graph_.num_edges_from_node(node.add.rhs) == 0)
                                 {
                                     ImGui.SameLine();
                                     ImGui.PushItemWidth(node_width - label_width);
-                                    ImGui.DragFloat("##hidelabel", &graph_.node(node.add.rhs).value, 0.01f);
+                                    ImGui.DragFloat("##hidelabel", ref graph_.node(node.add.rhs).value, 0.01f);
                                     ImGui.PopItemWidth();
                                 }
                                 ImNodes.EndInputAttribute();
@@ -358,12 +357,12 @@ namespace RuntimeNodes.ImGUI.Sample.example
                                 ImNodes.BeginInputAttribute(node.multiply.lhs);
                                 float label_width = ImGui.CalcTextSize("left").X;
                                 ImGui.TextUnformatted("left");
-                                if (graph_.num_edges_from_node(node.multiply.lhs) == 0ul)
+                                if (graph_.num_edges_from_node(node.multiply.lhs) == 0)
                                 {
                                     ImGui.SameLine();
                                     ImGui.PushItemWidth(node_width - label_width);
                                     ImGui.DragFloat(
-                                        "##hidelabel", &graph_.node(node.multiply.lhs).value, 0.01f);
+                                        "##hidelabel", ref graph_.node(node.multiply.lhs).value, 0.01f);
                                     ImGui.PopItemWidth();
                                 }
                                 ImNodes.EndInputAttribute();
@@ -373,12 +372,12 @@ namespace RuntimeNodes.ImGUI.Sample.example
                                 ImNodes.BeginInputAttribute(node.multiply.rhs);
                                 float label_width = ImGui.CalcTextSize("right").X;
                                 ImGui.TextUnformatted("right");
-                                if (graph_.num_edges_from_node(node.multiply.rhs) == 0ul)
+                                if (graph_.num_edges_from_node(node.multiply.rhs) == 0)
                                 {
                                     ImGui.SameLine();
                                     ImGui.PushItemWidth(node_width - label_width);
                                     ImGui.DragFloat(
-                                        "##hidelabel", &graph_.node(node.multiply.rhs).value, 0.01f);
+                                        "##hidelabel", ref graph_.node(node.multiply.rhs).value, 0.01f);
                                     ImGui.PopItemWidth();
                                 }
                                 ImNodes.EndInputAttribute();
@@ -414,12 +413,12 @@ namespace RuntimeNodes.ImGUI.Sample.example
                                 ImNodes.BeginInputAttribute(node.output.r);
                                 float label_width = ImGui.CalcTextSize("r").X;
                                 ImGui.TextUnformatted("r");
-                                if (graph_.num_edges_from_node(node.output.r) == 0ul)
+                                if (graph_.num_edges_from_node(node.output.r) == 0)
                                 {
                                     ImGui.SameLine();
                                     ImGui.PushItemWidth(node_width - label_width);
                                     ImGui.DragFloat(
-                                        "##hidelabel", &graph_.node(node.output.r).value, 0.01f, 0.0f, 1.0f);
+                                        "##hidelabel", ref graph_.node(node.output.r).value, 0.01f, 0.0f, 1.0f);
                                     ImGui.PopItemWidth();
                                 }
                                 ImNodes.EndInputAttribute();
@@ -431,12 +430,12 @@ namespace RuntimeNodes.ImGUI.Sample.example
                                 ImNodes.BeginInputAttribute(node.output.g);
                                 float label_width = ImGui.CalcTextSize("g").X;
                                 ImGui.TextUnformatted("g");
-                                if (graph_.num_edges_from_node(node.output.g) == 0ul)
+                                if (graph_.num_edges_from_node(node.output.g) == 0)
                                 {
                                     ImGui.SameLine();
                                     ImGui.PushItemWidth(node_width - label_width);
                                     ImGui.DragFloat(
-                                        "##hidelabel", &graph_.node(node.output.g).value, 0.01f, 0.0f, 1.0f);
+                                        "##hidelabel", ref graph_.node(node.output.g).value, 0.01f, 0.0f, 1.0f);
                                     ImGui.PopItemWidth();
                                 }
                                 ImNodes.EndInputAttribute();
@@ -448,12 +447,12 @@ namespace RuntimeNodes.ImGUI.Sample.example
                                 ImNodes.BeginInputAttribute(node.output.b);
                                 float label_width = ImGui.CalcTextSize("b").X;
                                 ImGui.TextUnformatted("b");
-                                if (graph_.num_edges_from_node(node.output.b) == 0ul)
+                                if (graph_.num_edges_from_node(node.output.b) == 0)
                                 {
                                     ImGui.SameLine();
                                     ImGui.PushItemWidth(node_width - label_width);
                                     ImGui.DragFloat(
-                                        "##hidelabel", &graph_.node(node.output.b).value, 0.01f, 0.0f, 1.0f);
+                                        "##hidelabel", ref graph_.node(node.output.b).value, 0.01f, 0.0f, 1.0f);
                                     ImGui.PopItemWidth();
                                 }
                                 ImNodes.EndInputAttribute();
@@ -477,12 +476,12 @@ namespace RuntimeNodes.ImGUI.Sample.example
                                 ImNodes.BeginInputAttribute(node.sine.input);
                                 float label_width = ImGui.CalcTextSize("number").X;
                                 ImGui.TextUnformatted("number");
-                                if (graph_.num_edges_from_node(node.sine.input) == 0ul)
+                                if (graph_.num_edges_from_node(node.sine.input) == 0)
                                 {
                                     ImGui.SameLine();
                                     ImGui.PushItemWidth(node_width - label_width);
                                     ImGui.DragFloat(
-                                        "##hidelabel", &graph_.node(node.sine.input).value, 0.01f, 0.0f, 1.0f);
+                                        "##hidelabel", ref graph_.node(node.sine.input).value, 0.01f, 0.0f, 1.0f);
                                     ImGui.PopItemWidth();
                                 }
                                 ImNodes.EndInputAttribute();
@@ -571,7 +570,7 @@ namespace RuntimeNodes.ImGUI.Sample.example
 
                 {
                     int num_selected = ImNodes.NumSelectedLinks();
-                    if (num_selected > 0 && ImGui.IsKeyReleased(SDL_SCANCODE_X))
+                    if (num_selected > 0 && ImGui.IsKeyReleased((int)SDL_Scancode.SDL_SCANCODE_X))
                     {
                         selected_links.Resize(num_selected);
                         fixed (int* data = &selected_links.Elements[0])
@@ -588,7 +587,7 @@ namespace RuntimeNodes.ImGUI.Sample.example
 
                 {
                     int num_selected = ImNodes.NumSelectedNodes();
-                    if (num_selected > 0 && ImGui.IsKeyReleased(SDL_SCANCODE_X))
+                    if (num_selected > 0 && ImGui.IsKeyReleased((int)SDL_Scancode.SDL_SCANCODE_X))
                     {
                         selected_nodes.Resize(num_selected);
 

@@ -1,5 +1,6 @@
 ﻿using ImGuiNET;
 using imnodesNET;
+using RuntimeNodes.ImGUI.Sample.example;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,15 +24,11 @@ namespace RuntimeNode.ImGUI.Sample
         // private static MemoryEditor _memoryEditor;
 
         // UI state
-        private static float _f = 0.0f;
-        private static int _counter = 0;
-        private static int _dragInt = 0;
         private static Vector3 _clearColor = new Vector3(0.45f, 0.55f, 0.6f);
-        private static bool _showImGuiDemoWindow = true;
-        private static bool _showAnotherWindow = false;
-        private static uint s_tab_bar_flags = (uint)ImGuiTabBarFlags.Reorderable;
         static bool[] s_opened = { true, true, true, true }; // Persistent user state
         private static bool _initialized;
+
+        private static INode_Editor _editor = new hello();
 
         static void SetThing(out float i, float val) { i = val; }
         static void Main(string[] args)
@@ -73,7 +70,7 @@ namespace RuntimeNode.ImGUI.Sample
                 _gd.SwapBuffers(_gd.MainSwapchain);
             }
 
-            example.NodeEditorShutdown();
+            _editor.NodeEditorShutdown();
             imnodes.EditorContextFree(_context);
 
 
@@ -90,10 +87,10 @@ namespace RuntimeNode.ImGUI.Sample
             if (!_initialized)
             {
                 _initialized = true;
-                example.NodeEditorInitialize();
+                _editor.NodeEditorInitialize();
             }
 
-            example.NodeEditorShow();
+            _editor.NodeEditorShow();
         }
     }
 }

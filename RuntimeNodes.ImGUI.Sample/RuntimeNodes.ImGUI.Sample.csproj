@@ -264,6 +264,10 @@
       <Project>{EF2362C9-1140-4E1D-A92A-7780CB677D51}</Project>
       <Name>ImNodes.NET</Name>
     </ProjectReference>
+    <ProjectReference Include="..\RuntimeNodes.ImGUI\RuntimeNodes.ImGUI.csproj">
+      <Project>{435D2E33-2B32-4AC6-98B7-087CA7EE46AA}</Project>
+      <Name>RuntimeNodes.ImGUI</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Veldrid.SDL2.4.8.0\build\net40\Veldrid.SDL2.targets" Condition="Exists('..\packages\Veldrid.SDL2.4.8.0\build\net40\Veldrid.SDL2.targets')" />
