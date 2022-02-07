@@ -6,15 +6,10 @@ using System.Threading.Tasks;
 
 namespace RuntimeNodes.ImGUI.Sample.example
 {
-    class node_editor
+    interface INode_Editor
     {
-        #pragma once
-
-namespace example
-{
-void NodeEditorInitialize();
-void NodeEditorShow();
-void NodeEditorShutdown();
-} // namespace example
+        void NodeEditorInitialize();
+        void NodeEditorShow();
+        void NodeEditorShutdown();
     }
 }
