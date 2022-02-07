@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RuntimeNodes
 {
-    abstract class MathOperationNode : ActivableNode, ITypesToResolveNode
+    public abstract class MathOperationNode : ActivableNode, ITypesToResolveNode
     {
         [Input]
         public IValueAccessor A { get; private set; }
@@ -60,7 +60,7 @@ namespace RuntimeNodes
         }
     }
 
-    class SubstractNode : MathOperationNode
+    public class SubstractNode : MathOperationNode
     {
         public override void Step()
         {
@@ -68,7 +68,7 @@ namespace RuntimeNodes
         }
     }
 
-    class AddNode : MathOperationNode
+    public class AddNode : MathOperationNode
     {
         public override void Step()
         {
@@ -76,7 +76,7 @@ namespace RuntimeNodes
         }
     }
 
-    class MultiplyNode : MathOperationNode
+    public class MultiplyNode : MathOperationNode
     {
         public override void Step()
         {
@@ -84,7 +84,7 @@ namespace RuntimeNodes
         }
     }
 
-    class DivideNode : MathOperationNode
+    public class DivideNode : MathOperationNode
     {
         public override void Step()
         {

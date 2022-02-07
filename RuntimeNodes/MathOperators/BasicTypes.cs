@@ -34,7 +34,7 @@ namespace RuntimeNodes.MathOperators
                 case TypeCode.Double:
                     return DoubleOp.Instance;
             }
-            throw new NotImplementedException();
+            return null;
         }
 
         class SByteOp : IMathOperator
@@ -173,8 +173,7 @@ namespace RuntimeNodes.MathOperators
 
             public object Substract(object a, object b)
             {
-                return (UInt32)a - (UInt32
-)b;
+                return (UInt32)a - (UInt32)b;
             }
         }
         class Int64Op : IMathOperator

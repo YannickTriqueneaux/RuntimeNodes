@@ -4,15 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5F1F4CC0-62DD-45D1-8E58-30AD369FA96A}</ProjectGuid>
+    <ProjectGuid>{435D2E33-2B32-4AC6-98B7-087CA7EE46AA}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>RuntimeNodes</RootNamespace>
-    <AssemblyName>RuntimeNodes</AssemblyName>
+    <RootNamespace>RuntimeNodes.ImGUI</RootNamespace>
+    <AssemblyName>RuntimeNodes.ImGUI</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -38,34 +39,20 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConstantValue.cs" />
-    <Compile Include="ContextValue.cs" />
-    <Compile Include="ExecutionContext.cs" />
-    <Compile Include="INode.cs" />
-    <Compile Include="NodeActivator.cs" />
-    <Compile Include="IMathOperator.cs" />
-    <Compile Include="InputAttribute.cs" />
-    <Compile Include="IterateNode.cs" />
-    <Compile Include="ITypesToResolveNode.cs" />
-    <Compile Include="MathOperationNodes.cs" />
-    <Compile Include="MathOperators\BasicTypes.cs" />
-    <Compile Include="OutputAttribute.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ResolveTypeResult.cs" />
-    <Compile Include="RuntimeNodeEnumerator.cs" />
-    <Compile Include="StoreNode.cs" />
-    <Compile Include="RuntimeValue.cs" />
-    <Compile Include="Utils\NodeInspector.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
