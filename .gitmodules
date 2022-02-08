@@ -4,3 +4,12 @@
 [submodule ".submodules/cimnodes"]
 	path = .submodules/cimnodes
 	url = https://github.com/cimgui/cimnodes.git
+[submodule ".submodules/ImGui.NET-nativebuild"]
+	path = .submodules/ImGui.NET-nativebuild
+	url = https://github.com/TillAlex/ImGui.NET-nativebuild.git
+[submodule ".submodules/LuaJIT-ImGui"]
+	path = .submodules/LuaJIT-ImGui
+	url = https://github.com/sonoro1234/LuaJIT-ImGui.git
+[submodule ".submodules/LuaJIT-SDL2"]
+	path = .submodules/LuaJIT-SDL2
+	url = https://github.com/sonoro1234/LuaJIT-SDL2.git
