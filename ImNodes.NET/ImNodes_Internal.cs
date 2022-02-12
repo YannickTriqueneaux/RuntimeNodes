@@ -1,511 +1,431 @@
-﻿using System;
+﻿using ImGuiNET;
+using ImNodes.NET.Utils;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using static ImNodes.NET.ImNodes;
 
 namespace ImNodes.NET
 {
     class ImNodes_Internal
     {
-#pragma once
+        public static ImNodesContext GImNodes;
 
-# include "imnodes.h"
-
-# include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
-# include <imgui_internal.h>
-
-# include <assert.h>
-# include <limits.h>
-
-        // the structure of this file:
-        //
-        // [SECTION] internal enums
-        // [SECTION] internal data structures
-        // [SECTION] global and editor context structs
-        // [SECTION] object pool implementation
-
-        struct ImNodesContext;
-
-        extern ImNodesContext* GImNodes;
-
-        // [SECTION] internal enums
-
-        typedef int ImNodesScope;
-        typedef int ImNodesAttributeType;
-        typedef int ImNodesUIState;
-        typedef int ImNodesClickInteractionType;
-        typedef int ImNodesLinkCreationType;
-
-        enum ImNodesScope_
+        public enum ImNodesScope : int
         {
-            ImNodesScope_None = 1,
-            ImNodesScope_Editor = 1 << 1,
-            ImNodesScope_Node = 1 << 2,
-            ImNodesScope_Attribute = 1 << 3
+            None = 1,
+            Editor = 1 << 1,
+            Node = 1 << 2,
+            Attribute = 1 << 3
         };
 
-        enum ImNodesAttributeType_
+        public enum ImNodesAttributeType : int
         {
-            ImNodesAttributeType_None,
-            ImNodesAttributeType_Input,
-            ImNodesAttributeType_Output
+            None,
+            Input,
+            Output
         };
 
-        enum ImNodesUIState_
+        public enum ImNodesUIState : int
         {
-            ImNodesUIState_None = 0,
-            ImNodesUIState_LinkStarted = 1 << 0,
-            ImNodesUIState_LinkDropped = 1 << 1,
-            ImNodesUIState_LinkCreated = 1 << 2
+            None = 0,
+            LinkStarted = 1 << 0,
+            LinkDropped = 1 << 1,
+            LinkCreated = 1 << 2
         };
 
-        enum ImNodesClickInteractionType_
+        public enum ImNodesClickInteractionType : int
         {
-            ImNodesClickInteractionType_Node,
-            ImNodesClickInteractionType_Link,
-            ImNodesClickInteractionType_LinkCreation,
-            ImNodesClickInteractionType_Panning,
-            ImNodesClickInteractionType_BoxSelection,
-            ImNodesClickInteractionType_ImGuiItem,
-            ImNodesClickInteractionType_None
+            Node,
+            Link,
+            LinkCreation,
+            Panning,
+            BoxSelection,
+            ImGuiItem,
+            None
         };
 
-        enum ImNodesLinkCreationType_
+        public enum ImNodesLinkCreationType
         {
-            ImNodesLinkCreationType_Standard,
-            ImNodesLinkCreationType_FromDetach
+            Standard,
+            FromDetach
         };
 
-        // [SECTION] internal data structures
-
-        // The object T must have the following interface:
-        //
-        // struct T
-        // {
-        //     T();
-        //
-        //     int id;
-        // };
-        template<typename T>
-struct ImObjectPool
+        public interface ImObjectPoolItem
         {
-            ImVector<T> Pool;
-            ImVector<bool> InUse;
-            ImVector<int> FreeList;
-            ImGuiStorage IdMap;
-
-            ImObjectPool() : Pool(), InUse(), FreeList(), IdMap() { }
+            uint Id { get; }
+            void Destroy();
+        }
+        public class ImObjectPool<T> where T : ImObjectPoolItem
+        {
+            public List<T> Pool = new List<T>();
+            public List<bool> InUse = new List<bool>();
+            public List<int> FreeList = new List<int>();
+            public ImGuiStoragePtr IdMap;
         };
 
-        // Emulates std::optional<int> using the sentinel value `INVALID_INDEX`.
-        struct ImOptionalIndex
+
+        public class ImNodeData : ImObjectPoolItem
         {
-            ImOptionalIndex() : _Index(INVALID_INDEX) { }
-            ImOptionalIndex(const int value) : _Index(value) { }
+            public uint Id { get; private set; }
+            public Vector2 Origin; // The node origin is in editor space
+            public ImRect TitleBarContentRect;
+            public ImRect Rect;
+            public List<int> PinIndices;
+            public bool Draggable;
+            public ColorStyle_ ColorStyle;
+            public LayoutStyle_ LayoutStyle;
 
-            // Observers
-
-            inline bool HasValue() const { return _Index != INVALID_INDEX; }
-
-        inline int Value() const
-        {
-        assert(HasValue());
-        return _Index;
-    }
-
-    // Modifiers
-
-    inline ImOptionalIndex& operator=(const int value)
-    {
-        _Index = value;
-        return *this;
-    }
-
-    inline void Reset() { _Index = INVALID_INDEX; }
-
-    inline bool operator ==(const ImOptionalIndex& rhs) const { return _Index == rhs._Index; }
-
-inline bool operator ==(const int rhs) const { return _Index == rhs; }
-
-    inline bool operator !=(const ImOptionalIndex& rhs) const { return _Index != rhs._Index; }
-
-    inline bool operator !=(const int rhs) const { return _Index != rhs; }
-
-    static const int INVALID_INDEX = -1;
-
-private:
-    int _Index;
-};
-
-struct ImNodeData
-{
-    int Id;
-    ImVec2 Origin; // The node origin is in editor space
-    ImRect TitleBarContentRect;
-    ImRect Rect;
-
-    struct
-    {
-        ImU32 Background, BackgroundHovered, BackgroundSelected, Outline, Titlebar, TitlebarHovered,
-            TitlebarSelected;
-}
-ColorStyle;
-
-struct
-    {
-        float CornerRounding;
-ImVec2 Padding;
-float BorderThickness;
-    } LayoutStyle;
-
-ImVector<int> PinIndices;
-bool Draggable;
-
-ImNodeData(const int node_id)
-        : Id(node_id), Origin(100.0f, 100.0f), TitleBarContentRect(),
-          Rect(ImVec2(0.0f, 0.0f), ImVec2(0.0f, 0.0f)), ColorStyle(), LayoutStyle(), PinIndices(),
-          Draggable(true)
-    {
-}
-
-~ImNodeData() { Id = INT_MIN; }
-};
-
-struct ImPinData
-{
-    int Id;
-    int ParentNodeIdx;
-    ImRect AttributeRect;
-    ImNodesAttributeType Type;
-    ImNodesPinShape Shape;
-    ImVec2 Pos; // screen-space coordinates
-    int Flags;
-
-    struct
-    {
-        ImU32 Background, Hovered;
-}
-ColorStyle;
-
-ImPinData(const int pin_id)
-        : Id(pin_id), ParentNodeIdx(), AttributeRect(), Type(ImNodesAttributeType_None),
-          Shape(ImNodesPinShape_CircleFilled), Pos(), Flags(ImNodesAttributeFlags_None),
-          ColorStyle()
-    {
-}
-};
-
-struct ImLinkData
-{
-    int Id;
-    int StartPinIdx, EndPinIdx;
-
-    struct
-    {
-        ImU32 Base, Hovered, Selected;
-}
-ColorStyle;
-
-ImLinkData(const int link_id) : Id(link_id), StartPinIdx(), EndPinIdx(), ColorStyle() { }
-};
-
-struct ImClickInteractionState
-{
-    ImNodesClickInteractionType Type;
-
-    struct
-    {
-        int StartPinIdx;
-    ImOptionalIndex EndPinIdx;
-    ImNodesLinkCreationType Type;
-}
-LinkCreation;
-
-struct
-    {
-        ImRect Rect; // Coordinates in grid space
-    } BoxSelector;
-
-ImClickInteractionState() : Type(ImNodesClickInteractionType_None) { }
-};
-
-struct ImNodesColElement
-{
-    ImU32 Color;
-    ImNodesCol Item;
-
-    ImNodesColElement(const ImU32 c, const ImNodesCol s) : Color(c), Item(s) { }
-};
-
-struct ImNodesStyleVarElement
-{
-    ImNodesStyleVar Item;
-    float FloatValue[2];
-
-    ImNodesStyleVarElement(const ImNodesStyleVar variable, const float value) : Item(variable)
-    {
-        FloatValue[0] = value;
-    }
-
-    ImNodesStyleVarElement(const ImNodesStyleVar variable, const ImVec2 value) : Item(variable)
-    {
-        FloatValue[0] = value.x;
-        FloatValue[1] = value.y;
-    }
-};
-
-// [SECTION] global and editor context structs
-
-public class ImNodesEditorContext
-{
-    ImObjectPool<ImNodeData> Nodes;
-    ImObjectPool<ImPinData> Pins;
-    ImObjectPool<ImLinkData> Links;
-
-    ImVector<int> NodeDepthOrder;
-
-    // ui related fields
-    ImVec2 Panning;
-    ImVec2 AutoPanningDelta;
-    // Minimum and maximum extents of all content in grid space. Valid after final
-    // ImNodes::EndNode() call.
-    ImRect GridContentBounds;
-
-    ImVector<int> SelectedNodeIndices;
-    ImVector<int> SelectedLinkIndices;
-
-    ImClickInteractionState ClickInteraction;
-
-    // Mini-map state set by MiniMap()
-
-    bool MiniMapEnabled;
-    ImNodesMiniMapLocation MiniMapLocation;
-    float MiniMapSizeFraction;
-    ImNodesMiniMapNodeHoveringCallback MiniMapNodeHoveringCallback;
-    ImNodesMiniMapNodeHoveringCallbackUserData MiniMapNodeHoveringCallbackUserData;
-
-    // Mini-map state set during EndNodeEditor() call
-
-    ImRect MiniMapRectScreenSpace;
-    ImRect MiniMapContentScreenSpace;
-    float MiniMapScaling;
-
-    ImNodesEditorContext()
-        : Nodes(), Pins(), Links(), Panning(0.f, 0.f), SelectedNodeIndices(), SelectedLinkIndices(),
-          ClickInteraction(), MiniMapEnabled(false), MiniMapSizeFraction(0.0f),
-          MiniMapNodeHoveringCallback(NULL), MiniMapNodeHoveringCallbackUserData(NULL),
-          MiniMapScaling(0.0f)
-    {
-    }
-};
-
-public class ImNodesContext
-{
-    ImNodesEditorContext* DefaultEditorCtx;
-    ImNodesEditorContext* EditorCtx;
-
-    // Canvas draw list and helper state
-    ImDrawList* CanvasDrawList;
-    ImGuiStorage NodeIdxToSubmissionIdx;
-    ImVector<int> NodeIdxSubmissionOrder;
-    ImVector<int> NodeIndicesOverlappingWithMouse;
-    ImVector<int> OccludedPinIndices;
-
-    // Canvas extents
-    ImVec2 CanvasOriginScreenSpace;
-    ImRect CanvasRectScreenSpace;
-
-    // Debug helpers
-    ImNodesScope CurrentScope;
-
-    // Configuration state
-    ImNodesIO Io;
-    ImNodesStyle Style;
-    ImVector<ImNodesColElement> ColorModifierStack;
-    ImVector<ImNodesStyleVarElement> StyleModifierStack;
-    ImGuiTextBuffer TextBuffer;
-
-    int CurrentAttributeFlags;
-    ImVector<int> AttributeFlagStack;
-
-    // UI element state
-    int CurrentNodeIdx;
-    int CurrentPinIdx;
-    int CurrentAttributeId;
-
-    ImOptionalIndex HoveredNodeIdx;
-    ImOptionalIndex HoveredLinkIdx;
-    ImOptionalIndex HoveredPinIdx;
-
-    ImOptionalIndex DeletedLinkIdx;
-    ImOptionalIndex SnapLinkIdx;
-
-    // Event helper state
-    // TODO: this should be a part of a state machine, and not a member of the global struct.
-    // Unclear what parts of the code this relates to.
-    int ImNodesUIState;
-
-    int ActiveAttributeId;
-    bool ActiveAttribute;
-
-    // ImGui::IO cache
-
-    ImVec2 MousePos;
-
-    bool LeftMouseClicked;
-    bool LeftMouseReleased;
-    bool AltMouseClicked;
-    bool LeftMouseDragging;
-    bool AltMouseDragging;
-    float AltMouseScrollDelta;
-};
-
-namespace IMNODES_NAMESPACE
-{
-    static inline ImNodesEditorContext& EditorContextGet()
-    {
-        // No editor context was set! Did you forget to call ImNodes::CreateContext()?
-        assert(GImNodes->EditorCtx != NULL);
-        return *GImNodes->EditorCtx;
-    }
-
-    // [SECTION] ObjectPool implementation
-
-    template<typename T>
-static inline int ObjectPoolFind(const ImObjectPool<T>& objects, const int id)
-    {
-        const int index = objects.IdMap.GetInt(static_cast<ImGuiID>(id), -1);
-        return index;
-    }
-
-    template<typename T>
-static inline void ObjectPoolUpdate(ImObjectPool<T>& objects)
-    {
-        for (int i = 0; i < objects.InUse.size(); ++i)
-        {
-            const int id = objects.Pool[i].Id;
-
-            if (!objects.InUse[i] && objects.IdMap.GetInt(id, -1) == i)
+            public class ColorStyle_
             {
-                objects.IdMap.SetInt(id, -1);
-                objects.FreeList.push_back(i);
-                (objects.Pool.Data + i)->~T();
+                public int Background, BackgroundHovered, BackgroundSelected, Outline, Titlebar, TitlebarHovered,
+                    TitlebarSelected;
+            }
+
+            public class LayoutStyle_
+            {
+                public float CornerRounding;
+                public Vector2 Padding;
+                public float BorderThickness;
+            }
+
+
+            public ImNodeData(uint node_id)
+            {
+                Id = node_id; Origin = new Vector2(100.0f, 100.0f); Rect = new ImRect(new Vector2(0.0f, 0.0f), new Vector2(0.0f, 0.0f));
+                ColorStyle = new ColorStyle_(); LayoutStyle = new LayoutStyle_(); PinIndices = new List<int>(); Draggable = true;
+            }
+
+            public virtual void Destroy() 
+            { 
+                Id = uint.MaxValue; 
+            }
+        };
+
+        public class ImPinData : ImObjectPoolItem
+        {
+            public uint Id { get; private set; }
+            public int ParentNodeIdx = 0;
+            public ImRect AttributeRect;
+            public ImNodesAttributeType Type = ImNodesAttributeType.None;
+            public ImNodesPinShape Shape = ImNodesPinShape.ImNodesPinShape_CircleFilled;
+            public Vector2 Pos; // screen-space coordinates
+            public ImNodesAttributeFlags Flags = ImNodesAttributeFlags.ImNodesAttributeFlags_None;
+            public ColorStyle_ ColorStyle;
+
+            public struct ColorStyle_
+            {
+                public int Background, Hovered;
+            }
+
+            public ImPinData(uint pin_id)
+            {
+                Id = pin_id;
+            }
+
+            public void Destroy()
+            {
+                Id = uint.MaxValue;
             }
         }
-    }
 
-    template<>
-    inline void ObjectPoolUpdate(ImObjectPool<ImNodeData>& nodes)
-    {
-        for (int i = 0; i < nodes.InUse.size(); ++i)
+        public class ImLinkData : ImObjectPoolItem
         {
-            if (nodes.InUse[i])
+            public uint Id { get; private set; }
+            public int StartPinIdx = 0, EndPinIdx = 0;
+            public ColorStyle_ ColorStyle;
+            public struct ColorStyle_
             {
-                nodes.Pool[i].PinIndices.clear();
+                int Base, Hovered, Selected;
             }
-            else
+
+            public ImLinkData(uint link_id) { Id = link_id; }
+            public void Destroy()
             {
-                const int id = nodes.Pool[i].Id;
+                Id = uint.MaxValue;
+            }
+        };
 
-                if (nodes.IdMap.GetInt(id, -1) == i)
+        public class ImClickInteractionState
+        {
+            public ImNodesClickInteractionType Type = ImNodesClickInteractionType.Node;
+            public LinkCreation_ LinkCreation;
+            public struct LinkCreation_
+            {
+                int StartPinIdx;
+                int? EndPinIdx;
+                ImNodesLinkCreationType Type;
+            }
+            public BoxSelector_ BoxSelector;
+            public struct BoxSelector_
+            {
+                ImRect Rect; // Coordinates in grid space
+            }
+        };
+
+        public class ImNodesColElement
+        {
+            int Color;
+            public ImNodesCol Item;
+
+            ImNodesColElement(int c, ImNodesCol s) { Color = c; Item = s; }
+        };
+
+        public class ImNodesStyleVarElement
+        {
+            public ImNodesStyleVar Item;
+            public float[] FloatValue = new float[2];
+
+            public ImNodesStyleVarElement(ImNodesStyleVar variable, float value)
+            {
+                Item = variable;
+                FloatValue[0] = value;
+            }
+
+            public ImNodesStyleVarElement(ImNodesStyleVar variable, Vector2 value)
+            {
+                Item = variable;
+                FloatValue[0] = value.X;
+                FloatValue[1] = value.Y;
+            }
+        };
+
+
+        // [SECTION] global and editor context structs
+
+        public class ImNodesEditorContext
+        {
+            public ImObjectPool<ImNodeData> Nodes = new ImObjectPool<ImNodeData>();
+            public ImObjectPool<ImPinData> Pins = new ImObjectPool<ImPinData>();
+            public ImObjectPool<ImLinkData> Links = new ImObjectPool<ImLinkData>();
+
+            public List<int> NodeDepthOrder = new List<int>();
+
+            // ui related fields
+            public Vector2 Panning = new Vector2(0.0f, 0.0f);
+            public Vector2 AutoPanningDelta;
+            // Minimum and maximum extents of all content in grid space. Valid after final
+            // ImNodes::EndNode() call.
+            public ImRect GridContentBounds;
+
+            public List<int> SelectedNodeIndices;
+            public List<int> SelectedLinkIndices;
+
+            public ImClickInteractionState ClickInteraction;
+
+            // Mini-map state set by MiniMap()
+
+            public bool MiniMapEnabled = false;
+            public ImNodesMiniMapLocation MiniMapLocation;
+            public float MiniMapSizeFraction = 0.0f;
+            public ImNodesMiniMapNodeHoveringCallback MiniMapNodeHoveringCallback;
+            public object MiniMapNodeHoveringCallbackUserData = null;
+
+            // Mini-map state set during EndNodeEditor() call
+
+            public ImRect MiniMapRectScreenSpace;
+            public ImRect MiniMapContentScreenSpace;
+            public float MiniMapScaling = 0.0f;
+        };
+
+        public unsafe class ImNodesContext
+        {
+            public ImNodesEditorContext DefaultEditorCtx = null;
+            public ImNodesEditorContext EditorCtx = null;
+
+            // Canvas draw list and helper state
+            public ImDrawListPtr CanvasDrawList = null;
+            public ImGuiStorage NodeIdxToSubmissionIdx;
+            public List<int> NodeIdxSubmissionOrder;
+            public List<int> NodeIndicesOverlappingWithMouse;
+            public List<int> OccludedPinIndices;
+
+            // Canvas extents
+            public Vector2 CanvasOriginScreenSpace;
+            public ImRect CanvasRectScreenSpace;
+
+            // Debug helpers
+            public ImNodesScope CurrentScope;
+
+            // Configuration state
+            public ImNodesIO Io;
+            public ImNodesStyle Style;
+            public List<ImNodesColElement> ColorModifierStack;
+            public List<ImNodesStyleVarElement> StyleModifierStack;
+            public ImGuiTextBuffer TextBuffer;
+
+            public int CurrentAttributeFlags;
+            public List<int> AttributeFlagStack;
+
+            // UI element state
+            public int CurrentNodeIdx;
+            public int CurrentPinIdx;
+            public int CurrentAttributeId;
+
+            public int? HoveredNodeIdx;
+            public int? HoveredLinkIdx;
+            public int? HoveredPinIdx;
+
+            public int? DeletedLinkIdx;
+            public int? SnapLinkIdx;
+
+            // Event helper state
+            // TODO: this should be a part of a state machine, and not a member of the global struct.
+            // Unclear what parts of the code this relates to.
+            public int ImNodesUIState;
+
+            public int ActiveAttributeId;
+            public bool ActiveAttribute;
+
+            // ImGui::IO cache
+
+            public Vector2 MousePos;
+
+            public bool LeftMouseClicked;
+            public bool LeftMouseReleased;
+            public bool AltMouseClicked;
+            public bool LeftMouseDragging;
+            public bool AltMouseDragging;
+            public float AltMouseScrollDelta;
+        };
+
+        public static ImNodesEditorContext EditorContextGet()
+        {
+            // No editor context was set! Did you forget to call ImNodes::CreateContext()?
+            Debug.Assert(GImNodes?.EditorCtx != null);
+            return GImNodes.EditorCtx;
+        }
+
+        // [SECTION] ObjectPool implementation
+
+        public static int ObjectPoolFind<T>(ImObjectPool<T> objects, uint id) where T : ImObjectPoolItem
+        {
+            int index = objects.IdMap.GetInt(id, -1);
+            return index;
+        }
+
+        public static void ObjectPoolUpdate<T>(ImObjectPool<T> objects) where T : ImObjectPoolItem
+        {
+            for (int i = 0; i < objects.InUse.Count; ++i)
+            {
+                uint id = objects.Pool[i].Id;
+
+                if (!objects.InUse[i] && objects.IdMap.GetInt(id, -1) == i)
                 {
-                    // Remove node idx form depth stack the first time we detect that this idx slot is
-                    // unused
-                    ImVector<int> & depth_stack = EditorContextGet().NodeDepthOrder;
-                    const int* const elem = depth_stack.find(i);
-                    assert(elem != depth_stack.end());
-                    depth_stack.erase(elem);
-
-                    nodes.IdMap.SetInt(id, -1);
-                    nodes.FreeList.push_back(i);
-                    (nodes.Pool.Data + i)->~ImNodeData();
+                    objects.IdMap.SetInt(id, -1);
+                    objects.FreeList.Add(i);
+                    (objects.Pool[i]).Destroy();
                 }
             }
         }
-    }
 
-    template<typename T>
-static inline void ObjectPoolReset(ImObjectPool<T>& objects)
-    {
-        if (!objects.InUse.empty())
+        public static void ObjectPoolUpdate(ImObjectPool<ImNodeData> nodes)
         {
-            memset(objects.InUse.Data, 0, objects.InUse.size_in_bytes());
-        }
-    }
-
-    template<typename T>
-static inline int ObjectPoolFindOrCreateIndex(ImObjectPool<T>& objects, const int id)
-    {
-        int index = objects.IdMap.GetInt(static_cast<ImGuiID>(id), -1);
-
-        // Construct new object
-        if (index == -1)
-        {
-            if (objects.FreeList.empty())
+            for (int i = 0; i < nodes.InUse.Count; ++i)
             {
-                index = objects.Pool.size();
-                IM_ASSERT(objects.Pool.size() == objects.InUse.size());
-                const int new_size = objects.Pool.size() + 1;
-                objects.Pool.resize(new_size);
-                objects.InUse.resize(new_size);
+                if (nodes.InUse[i])
+                {
+                    nodes.Pool[i].PinIndices.Clear();
+                }
+                else
+                {
+                    uint id = nodes.Pool[i].Id;
+
+                    if (nodes.IdMap.GetInt(id, -1) == i)
+                    {
+                        // Remove node idx form depth stack the first time we detect that this idx slot is
+                        // unused
+                        List<int> depth_stack = EditorContextGet().NodeDepthOrder;
+                        int elem = depth_stack.IndexOf(i);
+                        depth_stack.RemoveAt(elem);
+
+                        nodes.IdMap.SetInt(id, -1);
+                        nodes.FreeList.Add(i);
+                        (nodes.Pool[i]).Destroy();
+                    }
+                }
             }
-            else
-            {
-                index = objects.FreeList.back();
-                objects.FreeList.pop_back();
-            }
-            IM_PLACEMENT_NEW(objects.Pool.Data + index) T(id);
-            objects.IdMap.SetInt(static_cast<ImGuiID>(id), index);
         }
 
-        // Flag it as used
-        objects.InUse[index] = true;
-
-        return index;
-    }
-
-    template<>
-    inline int ObjectPoolFindOrCreateIndex(ImObjectPool<ImNodeData>& nodes, const int node_id)
-    {
-        int node_idx = nodes.IdMap.GetInt(static_cast<ImGuiID>(node_id), -1);
-
-        // Construct new node
-        if (node_idx == -1)
+        public static void ObjectPoolReset<T>(ImObjectPool<T> objects) where T : ImObjectPoolItem
         {
-            if (nodes.FreeList.empty())
+            if (objects.InUse.Any())
             {
-                node_idx = nodes.Pool.size();
-                IM_ASSERT(nodes.Pool.size() == nodes.InUse.size());
-                const int new_size = nodes.Pool.size() + 1;
-                nodes.Pool.resize(new_size);
-                nodes.InUse.resize(new_size);
+                objects.InUse.Clear();
             }
-            else
-            {
-                node_idx = nodes.FreeList.back();
-                nodes.FreeList.pop_back();
-            }
-            IM_PLACEMENT_NEW(nodes.Pool.Data + node_idx) ImNodeData(node_id);
-            nodes.IdMap.SetInt(static_cast<ImGuiID>(node_id), node_idx);
-
-            ImNodesEditorContext & editor = EditorContextGet();
-            editor.NodeDepthOrder.push_back(node_idx);
         }
 
-        // Flag node as used
-        nodes.InUse[node_idx] = true;
+        public static int ObjectPoolFindOrCreateIndex<T>(ImObjectPool<T> objects, uint id, Func<uint, T> constructor) where T : ImObjectPoolItem
+        {
+            int index = objects.IdMap.GetInt(id, -1);
 
-        return node_idx;
-    }
+            // Construct new object
+            if (index == -1)
+            {
+                if (objects.FreeList.Count == 0)
+                {
+                    index = objects.Pool.Count;
+                    Debug.Assert(objects.Pool.Count == objects.InUse.Count);
+                    int new_size = objects.Pool.Count + 1;
+                    objects.Pool.Add(constructor(id));
+                    objects.InUse.Resize(new_size);
+                }
+                else
+                {
+                    index = objects.FreeList.Last();
+                    objects.FreeList.RemoveAt(objects.FreeList.Count - 1);
+                    objects.Pool[index] = constructor(id);
+                }
+                objects.IdMap.SetInt(id, index);
+            }
 
-    template<typename T>
-static inline T& ObjectPoolFindOrCreateObject(ImObjectPool<T>& objects, const int id)
-    {
-        const int index = ObjectPoolFindOrCreateIndex(objects, id);
-        return objects.Pool[index];
-    }
-} // namespace IMNODES_NAMESPACE
+            // Flag it as used
+            objects.InUse[index] = true;
+
+            return index;
+        }
+
+        public static int ObjectPoolFindOrCreateIndex(ImObjectPool<ImNodeData> nodes, uint node_id)
+        {
+            int node_idx = nodes.IdMap.GetInt(node_id, -1);
+
+            // Construct new node
+            if (node_idx == -1)
+            {
+                if (nodes.FreeList.Count == 0)
+                {
+                    node_idx = nodes.Pool.Count;
+                    Debug.Assert(nodes.Pool.Count == nodes.InUse.Count);
+                    int new_size = nodes.Pool.Count + 1;
+                    nodes.Pool.Add(new ImNodeData(node_id));
+                    nodes.InUse.Resize(new_size);
+                }
+                else
+                {
+                    node_idx = nodes.FreeList.Last();
+                    nodes.FreeList.RemoveAt(nodes.FreeList.Count - 1);
+                    nodes.Pool[node_idx] = new ImNodeData(node_id);
+                }
+                nodes.IdMap.SetInt(node_id, node_idx);
+
+                ImNodesEditorContext editor = EditorContextGet();
+                editor.NodeDepthOrder.Add(node_idx);
+            }
+
+            // Flag node as used
+            nodes.InUse[node_idx] = true;
+
+            return node_idx;
+        }
+
+        public static T ObjectPoolFindOrCreateObject<T>(ImObjectPool<T> objects, uint id, Func<uint, T> constructor) where T : ImObjectPoolItem
+        {
+            int index = ObjectPoolFindOrCreateIndex(objects, id, constructor);
+            return objects.Pool[index];
+        }
     }
 }
