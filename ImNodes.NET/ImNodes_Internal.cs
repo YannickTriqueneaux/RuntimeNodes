@@ -11,7 +11,7 @@ using static ImNodes.NET.ImNodes;
 
 namespace ImNodes.NET
 {
-    class ImNodes_Internal
+    public class ImNodes_Internal
     {
         public static ImNodesContext GImNodes;
 

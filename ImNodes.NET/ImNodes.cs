@@ -21,9 +21,7 @@ namespace ImNodes.NET
         // [SECTION] API implementation
 
 
-        ImNodesContext GImNodes = null;
-
-        public class CubicBezier
+        public struct CubicBezier
         {
             public Vector2 P0, P1, P2, P3;
             public int NumSegments;
@@ -113,7 +111,7 @@ namespace ImNodes.NET
                 Vector2 min = new Vector2(ImMin(cb.P0.X, cb.P3.X), ImMin(cb.P0.Y, cb.P3.Y));
                 Vector2 max = new Vector2(ImMax(cb.P0.X, cb.P3.X), ImMax(cb.P0.Y, cb.P3.Y));
 
-                const float hover_distance = GImNodes.Style.LinkHoverDistance;
+                float hover_distance = GImNodes.Style.LinkHoverDistance;
 
                 ImRect rect = new ImRect(min, max);
                 rect.Add(cb.P1);
@@ -123,7 +121,7 @@ namespace ImNodes.NET
                 return rect;
             }
 
-            public static CubicBezier GetCubicBezier(
+            internal static CubicBezier GetCubicBezier(
                 Vector2 start,
                 Vector2 end,
                 ImNodesAttributeType start_type,
@@ -227,7 +225,7 @@ namespace ImNodes.NET
                 return false;
             }
 
-            public static bool RectangleOverlapsLink(
+            internal static bool RectangleOverlapsLink(
                 ImRect              rectangle,
                 Vector2              start,
                 Vector2              end,
@@ -259,7 +257,7 @@ namespace ImNodes.NET
                     // Second level of refinement: do a more expensive test against the
                     // link
 
-                    const CubicBezier cubic_bezier =
+                    CubicBezier cubic_bezier =
                         GetCubicBezier(start, end, start_type, GImNodes.Style.LinkLineSegmentsPerLength);
                     return RectangleOverlapsBezier(rectangle, cubic_bezier);
                 }
@@ -310,23 +308,24 @@ namespace ImNodes.NET
                 return (ScreenSpaceToGridSpace(editor, v) - editor.GridContentBounds.Min) *
                            editor.MiniMapScaling +
                        editor.MiniMapContentScreenSpace.Min;
-            };
+            }
 
-            public static ImRect ScreenSpaceToMiniMapSpace(const ImNodesEditorContext editor, const ImRect& r)
+            public static ImRect ScreenSpaceToMiniMapSpace(ImNodesEditorContext editor, ImRect r)
             {
-                return ImRect(
+                return new ImRect(
                     ScreenSpaceToMiniMapSpace(editor, r.Min), ScreenSpaceToMiniMapSpace(editor, r.Max));
-            };
+            }
 
             // [SECTION] draw list helper
 
-            void ImDrawListGrowChannels(ImDrawList* draw_list, const int num_channels)
+            unsafe void ImDrawListGrowChannels(ImDrawListPtr draw_list, int num_channels)
             {
-                ImDrawListSplitter & splitter = draw_list->_Splitter;
+                ImDrawListSplitter* splitter = &draw_list.NativePtr->_Splitter;
+                ImDrawListSplitterPtr splitterPtr = new ImDrawListSplitterPtr(splitter);
 
-                if (splitter._Count == 1)
+                if (splitter->_Count == 1)
                 {
-                    splitter.Split(draw_list, num_channels + 1);
+                    splitterPtr.Split(draw_list, num_channels + 1);
                     return;
                 }
 
@@ -335,7 +334,7 @@ namespace ImNodes.NET
                 // instances after splitter._Count, instead of over the whole splitter._Channels array like
                 // the regular ImDrawListSplitter.Split method does.
 
-                const int old_channel_capacity = splitter._Channels.Size;
+                int old_channel_capacity = splitter->_Channels.Size;
                 // NOTE: _Channels is not resized down, and therefore _Count <= _Channels.size()!
                 const int old_channel_count = splitter._Count;
                 const int requested_channel_count = old_channel_count + num_channels;
