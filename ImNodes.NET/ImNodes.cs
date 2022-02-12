@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using static ImNodes.NET.ImNodes_Internal;
+using System.Runtime.CompilerServices;
 
 namespace ImNodes.NET
 {
@@ -359,6 +360,7 @@ namespace ImNodes.NET
                     // Else, we need to construct new draw channels.
                     else
                     {
+                    Unsafe.
                         IM_PLACEMENT_NEW(&channel) ImDrawChannel();
                     }
 
