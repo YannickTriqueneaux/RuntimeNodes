@@ -337,11 +337,11 @@ namespace ImNodes.NET
 
                 int old_channel_capacity = splitter->_Channels.Size;
                 // NOTE: _Channels is not resized down, and therefore _Count <= _Channels.size()!
-                const int old_channel_count = splitter._Count;
-                const int requested_channel_count = old_channel_count + num_channels;
+                int old_channel_count = splitter->_Count;
+                int requested_channel_count = old_channel_count + num_channels;
                 if (old_channel_capacity < old_channel_count + num_channels)
                 {
-                    splitter._Channels.resize(requested_channel_count);
+                    splitter->_Channels.resize(requested_channel_count);
                 }
 
                 splitter._Count = requested_channel_count;
