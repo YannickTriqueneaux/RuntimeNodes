@@ -18,7 +18,7 @@ namespace RuntimeNodes.ImGUI.Utils
             val += b;
             val <<= 8;
             val += a;
-            return (uint)(r << 3 * 8 + g << 2 * 8 + b << 8 + a);
+            return (uint)val;
         }
     }
 }

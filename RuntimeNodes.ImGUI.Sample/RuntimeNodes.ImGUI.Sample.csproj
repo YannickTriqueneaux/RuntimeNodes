@@ -251,9 +251,7 @@
     <EmbeddedResource Include="Shaders/Metal/imgui-frag.metallib" LogicalName="imgui-frag.metallib" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\.submodules\ImGui.NET\deps\cimgui\win-x64\cimgui.dll" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\.submodules\ImGui.NET\deps\cimgui\osx-x64\cimgui.dylib" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\.submodules\ImGui.NET\deps\cimgui\linux-x64\cimgui.so" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\deps\cimgui.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\submodules\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj">

@@ -8,7 +8,7 @@ using ImNodes = imnodesNET.imnodes;
 
 namespace RuntimeNodes.ImGUI.Sample.example
 {
-    class multi_editor
+    class multi_editor : INode_Editor
     {
         class Node
         {
@@ -46,7 +46,7 @@ namespace RuntimeNodes.ImGUI.Sample.example
                 ImNodes.BeginNodeEditor();
                 
                 if (ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) &&
-                    ImNodes.IsEditorHovered() && ImGui.IsKeyReleased((int)SDL_Scancode.SDL_SCANCODE_A))
+                    ImNodes.IsEditorHovered() && ImGui.IsKeyReleased((int)Veldrid.Key.A))
                 {
                     int node_id = ++current_id;
                     ImNodes.SetNodeScreenSpacePos(node_id, ImGui.GetMousePos());
@@ -113,7 +113,7 @@ namespace RuntimeNodes.ImGUI.Sample.example
         Editor editor1 = new Editor();
         Editor editor2 = new Editor();
 
-        unsafe void NodeEditorInitialize()
+        public unsafe void NodeEditorInitialize()
         {
             editor1.context = ImNodes.EditorContextCreate();
             editor2.context = ImNodes.EditorContextCreate();
@@ -123,13 +123,13 @@ namespace RuntimeNodes.ImGUI.Sample.example
             io->link_detach_with_modifier_click.modifier = &ImGui.GetIO().NativePtr->KeyCtrl;
         }
 
-        void NodeEditorShow()
+        public void NodeEditorShow()
         {
             editor1.show_editor("editor1");
             editor2.show_editor("editor2");
         }
 
-        void NodeEditorShutdown()
+        public void NodeEditorShutdown()
         {
             ImNodes.PopAttributeFlag();
             ImNodes.EditorContextFree(editor1.context);

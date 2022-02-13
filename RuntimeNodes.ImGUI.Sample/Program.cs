@@ -28,9 +28,8 @@ namespace RuntimeNode.ImGUI.Sample
         static bool[] s_opened = { true, true, true, true }; // Persistent user state
         private static bool _initialized;
 
-        private static INode_Editor _editor = new hello();
+        private static INode_Editor _editor = new Color_Node_Editor();
 
-        static void SetThing(out float i, float val) { i = val; }
         static void Main(string[] args)
         {
             // Create window, GraphicsDevice, and all resources necessary for the demo.
@@ -47,10 +46,7 @@ namespace RuntimeNode.ImGUI.Sample
             _cl = _gd.ResourceFactory.CreateCommandList();
             _controller = new ImGuiController(_gd, _gd.MainSwapchain.Framebuffer.OutputDescription, _window.Width, _window.Height);
 
-
-            _context = imnodes.EditorContextCreate();
-            
-
+            IntPtr imnodesContext = imnodes.CreateContext();
 
             // Main application loop
             while (_window.Exists)
@@ -71,7 +67,7 @@ namespace RuntimeNode.ImGUI.Sample
             }
 
             _editor.NodeEditorShutdown();
-            imnodes.EditorContextFree(_context);
+            imnodes.DestroyContext(imnodesContext);
 
 
             // Clean up Veldrid resources

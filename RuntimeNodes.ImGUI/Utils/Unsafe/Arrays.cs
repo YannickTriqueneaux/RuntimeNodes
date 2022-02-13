@@ -44,7 +44,7 @@ namespace RuntimeNodes.ImGUI.Utils.UnsafeUtils
 
             public void SetLength(int newLength)
             {
-                if (newLength > Lenght)
+                if (newLength > Elements.Length)
                     throw new InvalidOperationException("SetLength is not a Resize");
                 m_index = newLength - 1;
             }
@@ -83,7 +83,7 @@ namespace RuntimeNodes.ImGUI.Utils.UnsafeUtils
             {
                 if (m_disposed)
                     throw new ObjectDisposedException(nameof(AlignedArrayEnumerator<T>));
-                if(m_index < m_array.Lenght)
+                if(m_index+1 < m_array.Lenght)
                 {
                     m_index++;
                     return true;
