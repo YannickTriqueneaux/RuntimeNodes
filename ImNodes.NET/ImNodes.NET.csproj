@@ -55,7 +55,7 @@
     <Compile Include="Utils\ListExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\.submodules\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj">
+    <ProjectReference Include="..\submodules\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj">
       <Project>{c14ecfb0-9637-4a43-87fd-c889cfbc75b5}</Project>
       <Name>ImGui.NET</Name>
     </ProjectReference>

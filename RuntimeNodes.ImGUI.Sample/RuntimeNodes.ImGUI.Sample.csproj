@@ -256,11 +256,11 @@
     <Content Include="..\.submodules\ImGui.NET\deps\cimgui\linux-x64\cimgui.so" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\.submodules\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj">
+    <ProjectReference Include="..\submodules\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj">
       <Project>{C14ECFB0-9637-4A43-87FD-C889CFBC75B5}</Project>
       <Name>ImGui.NET</Name>
     </ProjectReference>
-    <ProjectReference Include="..\.submodules\ImGui.NET\src\ImNodes.NET\ImNodes.NET.csproj">
+    <ProjectReference Include="..\submodules\ImGui.NET\src\ImNodes.NET\ImNodes.NET.csproj">
       <Project>{EF2362C9-1140-4E1D-A92A-7780CB677D51}</Project>
       <Name>ImNodes.NET</Name>
     </ProjectReference>

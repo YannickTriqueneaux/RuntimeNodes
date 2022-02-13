@@ -13,3 +13,6 @@
 [submodule ".submodules/LuaJIT-SDL2"]
 	path = .submodules/LuaJIT-SDL2
 	url = https://github.com/sonoro1234/LuaJIT-SDL2.git
+[submodule "submodules/ImGui.NET-nativebuild"]
+	path = submodules/ImGui.NET-nativebuild
+	url = https://github.com/mellinoe/ImGui.NET-nativebuild.git
