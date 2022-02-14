@@ -199,13 +199,12 @@ namespace RuntimeNodes.ImGUI.Sample.example
 
                         if (ImGui.MenuItem("add"))
                         {
-                            Node value = new Node(NodeType.value, 0.0f);
                             Node op = new Node(NodeType.add);
 
                             UiNode ui_node = new UiNode();
                             ui_node.type = UiNodeType.add;
-                            ui_node.add.lhs = graph_.insert_node(value);
-                            ui_node.add.rhs = graph_.insert_node(value);
+                            ui_node.add.lhs = graph_.insert_node(new Node(NodeType.value, 0.0f));
+                            ui_node.add.rhs = graph_.insert_node(new Node(NodeType.value, 0.0f));
                             ui_node.id = graph_.insert_node(op);
 
                             graph_.insert_edge(ui_node.id, ui_node.add.lhs);
@@ -217,13 +216,12 @@ namespace RuntimeNodes.ImGUI.Sample.example
 
                         if (ImGui.MenuItem("multiply"))
                         {
-                            Node value = new Node(NodeType.value, 0.0f);
                             Node op = new Node(NodeType.multiply);
 
                             UiNode ui_node = new UiNode();
                             ui_node.type = UiNodeType.multiply;
-                            ui_node.multiply.lhs = graph_.insert_node(value);
-                            ui_node.multiply.rhs = graph_.insert_node(value);
+                            ui_node.multiply.lhs = graph_.insert_node(new Node(NodeType.value, 0.0f));
+                            ui_node.multiply.rhs = graph_.insert_node(new Node(NodeType.value, 0.0f));
                             ui_node.id = graph_.insert_node(op);
 
                             graph_.insert_edge(ui_node.id, ui_node.multiply.lhs);
@@ -235,14 +233,13 @@ namespace RuntimeNodes.ImGUI.Sample.example
 
                         if (ImGui.MenuItem("output") && root_node_id_ == -1)
                         {
-                            Node value = new Node(NodeType.value, 0.0f);
                             Node output = new Node(NodeType.output);
 
                             UiNode ui_node = new UiNode();
                             ui_node.type = UiNodeType.output;
-                            ui_node.output.r = graph_.insert_node(value);
-                            ui_node.output.g = graph_.insert_node(value);
-                            ui_node.output.b = graph_.insert_node(value);
+                            ui_node.output.r = graph_.insert_node(new Node(NodeType.value, 0.0f));
+                            ui_node.output.g = graph_.insert_node(new Node(NodeType.value, 0.0f));
+                            ui_node.output.b = graph_.insert_node(new Node(NodeType.value, 0.0f));
                             ui_node.id = graph_.insert_node(output);
 
                             graph_.insert_edge(ui_node.id, ui_node.output.r);
@@ -411,9 +408,8 @@ namespace RuntimeNodes.ImGUI.Sample.example
                                 {
                                     ImGui.SameLine();
                                     ImGui.PushItemWidth(node_width - label_width);
-                                    var rOut = graph_.node(node.output.r);
                                     ImGui.DragFloat(
-                                        "##hidelabel", ref rOut.value, 0.01f, 0.0f, 1.0f);
+                                        "##hidelabel", ref graph_.node(node.output.r).value, 0.01f, 0.0f, 1.0f);
                                     ImGui.PopItemWidth();
                                 }
                                 ImNodes.EndInputAttribute();
@@ -429,9 +425,8 @@ namespace RuntimeNodes.ImGUI.Sample.example
                                 {
                                     ImGui.SameLine();
                                     ImGui.PushItemWidth(node_width - label_width);
-                                    var gNode = graph_.node(node.output.g);
                                     ImGui.DragFloat(
-                                        "##hidelabel", ref gNode.value, 0.01f, 0.0f, 1.0f);
+                                        "##hidelabel", ref graph_.node(node.output.g).value, 0.01f, 0.0f, 1.0f);
                                     ImGui.PopItemWidth();
                                 }
                                 ImNodes.EndInputAttribute();
@@ -447,9 +442,8 @@ namespace RuntimeNodes.ImGUI.Sample.example
                                 {
                                     ImGui.SameLine();
                                     ImGui.PushItemWidth(node_width - label_width);
-                                    var bNode = graph_.node(node.output.b);
                                     ImGui.DragFloat(
-                                        "##hidelabel", ref bNode.value, 0.01f, 0.0f, 1.0f);
+                                        "##hidelabel", ref graph_.node(node.output.b).value, 0.01f, 0.0f, 1.0f);
                                     ImGui.PopItemWidth();
                                 }
                                 ImNodes.EndInputAttribute();
@@ -629,8 +623,7 @@ namespace RuntimeNodes.ImGUI.Sample.example
 
                 // The color output window
 
-                uint color =
-                    root_node_id_ != -1 ? evaluate(graph_, root_node_id_) : ColorUtils.GetColorU32(255, 20, 147, 255);
+                uint color = root_node_id_ != -1 ? evaluate(graph_, root_node_id_) : ColorUtils.GetColorU32(255, 20, 147, 255);
                 ImGui.PushStyleColor(ImGuiCol.WindowBg, color);
                 ImGui.Begin("output color");
                 ImGui.End();
