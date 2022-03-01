@@ -230,6 +230,7 @@
     <Compile Include="example\color_node_editor.cs" />
     <Compile Include="example\graph.cs" />
     <Compile Include="example\hello.cs" />
+    <None Include="example\implot_demo.cs" />
     <Compile Include="example\multi_editor.cs" />
     <Compile Include="example\node_editor.cs" />
     <Compile Include="ImGuiController.cs" />
@@ -265,6 +266,10 @@
     <ProjectReference Include="..\RuntimeNodes.ImGUI\RuntimeNodes.ImGUI.csproj">
       <Project>{435D2E33-2B32-4AC6-98B7-087CA7EE46AA}</Project>
       <Name>RuntimeNodes.ImGUI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\submodules\ImGui.NET\src\ImPlot.NET\ImPlot.NET.csproj">
+      <Project>{40FC32CA-A6CD-4DD6-8042-C04F4025E56D}</Project>
+      <Name>ImPlot.NET</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
